@@ -6,6 +6,7 @@ import paramiko
 import os
 import sys
 import select
+import logging
 from paramiko.common import OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED, OPEN_SUCCEEDED, AUTH_SUCCESSFUL
 from pathlib import Path
 
@@ -18,6 +19,8 @@ HOSTKEY = paramiko.RSAKey(filename=CWD / 'rsa.key')
 active_clients = {}
 clients_lock = threading.Lock()
 id_identifier = 0
+
+logging.getLogger('paramiko').setLevel(logging.CRITICAL)
 
 class Server(paramiko.ServerInterface):
     def __init__(self):
@@ -203,7 +206,20 @@ def handle_client_connection(client_socket, address):
 
         with clients_lock:
             id_identifier += 1
+            current_id = id_identifier
             active_clients[id_identifier] = {'id': id_identifier, 'address': address[0], 'sys_info': sys_info, 'channel': chan, 'session': bhSession}
+
+        while bhSession.is_active():
+            time.sleep(10)
+            try:
+                bhSession.send_ignore()
+            except Exception:
+                break
+        
+        with clients_lock:
+            if current_id in active_clients:
+                del active_clients[current_id]
+        bhSession.close()
 
     except Exception as e:
         print(f'SSH initialization error: {e}')
