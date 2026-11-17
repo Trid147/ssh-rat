@@ -15,10 +15,10 @@ This project was developed strictly for **educational purposes**, security resea
 ## 🚀 Getting Started
 
 ### Prerequisites
-Both server and client require Python 3.x and the `paramiko` library installed.
+Both server and client require Python 3.x and some dependencies installed.
 
 ```bash
-pip install paramiko
+pip install -r requirements.txt
 ```
 
 ### 1. Generate Server Host Keys

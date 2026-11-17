@@ -64,7 +64,6 @@ def start_management(client_info):
             if not command:
                 chan.send(b'keep_alive')
                 continue
-            LAST_CMD = command
             if command == 'back':
                 print('[+] Going back to the main menu...')
                 chan.send(b'keep_alive')
